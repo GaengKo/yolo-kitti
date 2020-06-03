@@ -1,4 +1,5 @@
 classes=8
-train=data/kitti.txt
-valid=data/kitti.txt
+train=data/kittitrain.txt
+valid=data/kittitest.txt
 names=data/kitti.names
+
