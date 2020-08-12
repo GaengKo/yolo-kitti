@@ -1,0 +1,4 @@
+classes=8
+train=data/kitti_OD_train.txt
+valid=data/kitti_OD_valid.txt
+names=data/kitti_OD.names
