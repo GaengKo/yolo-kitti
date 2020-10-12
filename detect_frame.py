@@ -3,7 +3,7 @@ import argparse
 from models import *  # set ONNX_EXPORT in models.py
 from utils.datasets import *
 from utils.utils import *
-
+import numpy as np
 class Yolo():
     def __init__(self):
         self.weights = 'weights/best.pt'
@@ -30,10 +30,10 @@ class Yolo():
 
         self.names = 'data/kitti_OD.names'
         self.names = list(glob.iglob('./**/' + self.names, recursive=True))[0]
-        print('***',end='')
+        #print('***',end='')
 
         self.names = load_classes(self.names)
-        print(self.names)
+        #print(self.names)
         self.colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(self.names))]
     def forword(self, frame):
         im0 = letterbox(frame, new_shape=self.imgsz)[0]
@@ -49,7 +49,7 @@ class Yolo():
             img = img.unsqueeze(0)
 
         t1 = torch_utils.time_synchronized()
-        print(img.shape)
+        #print(img.shape)
         pred = self.model(img, augment=True)[0]
         t2 = torch_utils.time_synchronized()
 
@@ -65,8 +65,11 @@ class Yolo():
         for i, det in enumerate(pred):
             if det is not None and len(det):
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], frame.shape).round()
+                #print(det[:,:4])
 
-
+        result = pred[0].cpu().detach().numpy()
+        print(result)
+        return result
 
 
 
@@ -235,33 +238,33 @@ def detect(save_img=False):
     print('Done. (%.3fs)' % (time.time() - t0))
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp.cfg', help='*.cfg path')
-    parser.add_argument('--names', type=str, default='data/kitti_OD.names', help='*.names path')
-    parser.add_argument('--weights', type=str, default='weights/best.pt', help='weights path')
-    parser.add_argument('--source', type=str, default='data/samples', help='source')  # input file/folder, 0 for webcam
-    parser.add_argument('--output', type=str, default='output', help='output folder')  # output folder
-    parser.add_argument('--img-size', type=int, default=512, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.6, help='IOU threshold for NMS')
-    parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
-    parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
-    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
-    parser.add_argument('--view-img', action='store_true', help='display results')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--classes', nargs='+', type=int, help='filter by class')
-    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
-    parser.add_argument('--augment', action='store_true', help='augmented inference')
-    opt = parser.parse_args()
-    opt.cfg = list(glob.iglob('./**/' + opt.cfg, recursive=True))[0]  # find file
-    opt.names = list(glob.iglob('./**/' + opt.names, recursive=True))[0]  # find file
-    print(opt)
-
-    with torch.no_grad():
-        detect()
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp.cfg', help='*.cfg path')
+#     parser.add_argument('--names', type=str, default='data/kitti_OD.names', help='*.names path')
+#     parser.add_argument('--weights', type=str, default='weights/best.pt', help='weights path')
+#     parser.add_argument('--source', type=str, default='data/samples', help='source')  # input file/folder, 0 for webcam
+#     parser.add_argument('--output', type=str, default='output', help='output folder')  # output folder
+#     parser.add_argument('--img-size', type=int, default=512, help='inference size (pixels)')
+#     parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')
+#     parser.add_argument('--iou-thres', type=float, default=0.6, help='IOU threshold for NMS')
+#     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
+#     parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
+#     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
+#     parser.add_argument('--view-img', action='store_true', help='display results')
+#     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+#     parser.add_argument('--classes', nargs='+', type=int, help='filter by class')
+#     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+#     parser.add_argument('--augment', action='store_true', help='augmented inference')
+#     opt = parser.parse_args()
+#     opt.cfg = list(glob.iglob('./**/' + opt.cfg, recursive=True))[0]  # find file
+#     opt.names = list(glob.iglob('./**/' + opt.names, recursive=True))[0]  # find file
+# #     print(opt)
+#
+#     with torch.no_grad():
+#         detect()
 
 a = Yolo()
 frame = cv2.imread('./data/samples/000002.png')
-print(frame.shape)
+#print(frame.shape)
 a.forword(frame)
