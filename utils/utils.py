@@ -8,7 +8,9 @@ import time
 from copy import copy
 from pathlib import Path
 from sys import platform
-
+import sys
+py_dll_path = os.path.join(sys.exec_prefix, 'Library', 'bin')
+os.add_dll_directory(py_dll_path)
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
