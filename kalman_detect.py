@@ -224,6 +224,7 @@ class Sort(object):
       if np.any(np.isnan(pos)):
         to_del.append(t)
     trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
+    print(len(trks))
     for t in reversed(to_del):
       self.trackers.pop(t)
     matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets,trks, self.iou_threshold)
@@ -240,7 +241,7 @@ class Sort(object):
     for trk in reversed(self.trackers):
         d = trk.get_state()[0]
         if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
-          ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
+            ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
         i -= 1
         # remove dead tracklet
         if(trk.time_since_update > self.max_age):
@@ -322,7 +323,7 @@ class Yolo():
 
 
 
-
+"""
 def detect(save_img=False):
     imgsz = (320, 192) if ONNX_EXPORT else opt.img_size  # (320, 192) or (416, 256) or (608, 352) for (height, width)
     out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
@@ -484,6 +485,7 @@ def detect(save_img=False):
             os.system('open ' + save_path)
 
     print('Done. (%.3fs)' % (time.time() - t0))
+"""
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='SORT demo')
@@ -525,7 +527,8 @@ def parse_args():
 #
 #     with torch.no_grad():
 #         detect()
-
+total_time = 0.0
+total_frames = 0
 a = Yolo()
 frame = cv2.imread('./data/samples/000002.png')
 path = 'H:/Trackingset'
@@ -535,17 +538,47 @@ file_array = []
 for i in range(len(filelist)):
     npath = path+'/'+filelist[i]
     filelist2 = os.listdir(npath)
+    file_array.append([])
     for j in filelist2:
-        file_array.append(npath+'/'+j)
+        file_array[i].append(npath+'/'+j)
+
 #print(frame.shape)
-for k in file_array:
-    print(k)
-    frame = cv2.imread(k)
-    result = a.forword(frame)
-    for i in range(len(result)):
-        frame = cv2.rectangle(frame, (result[i][0],result[i][1]), (result[i][2],result[i][3]),(0,0,255),3)
-    cv2.imshow("asd", frame)
-    #print(result)
-    cv2.waitKey(1)
+
+for video in file_array:
+    mot_tracker = Sort(max_age=1,
+                       min_hits=3,
+                       iou_threshold=0.3)  # create instance of the SORT tracker
+    for f in video:
+        print(f)
+        frame = cv2.imread(f)
+        result = a.forword(frame)
+        start_time = time.time()
+        trackers = mot_tracker.update(result)
+        cycle_time = time.time() - start_time
+        total_time += cycle_time
+        total_frames += 1
+        #print(result)
+        for d in trackers:
+            #print(d)
+            #d[:4] = list(map(int,d[:4]))
+            #print('%d,%.2f,%.2f,%.2f,%.2f,1,-1,-1,-1'%(d[4],d[0],d[1],d[2]-d[0],d[3]-d[1]))
+            print((d[0], d[1]), (d[2], d[3]))
+            frame = cv2.rectangle(frame, (int(d[0]), int(d[1])), (int(d[2]), int(d[3])), (0, 0, 255), 3)
+            frame = cv2.putText(frame, str(int(d[4])),(int(d[0]), int(d[1])),1,2,(0, 0, 255), 2)
+
+          #if(display):
+          #  d = d.astype(np.int32)
+            #ax1.add_patch(patches.Rectangle((d[0],d[1]),d[2]-d[0],d[3]-d[1],fill=False,lw=3,ec=colours[d[4]%32,:]))
+        print('-------real value ---------')
+        for i in range(len(result)):
+            result[i] = list(map(int,result[i]))
+            print((result[i][0],result[i][1]), (result[i][2],result[i][3]))
+            frame = cv2.rectangle(frame, (result[i][0],result[i][1]), (result[i][2],result[i][3]),(0,255,255),2)
+            #frame = cv2.rectangle(frame, (d[0], d[1]), (d[2], d[3]), (0, 0, 255), 3)
+
+        cv2.imshow("asd", frame)
+
+        #print(result)
+        cv2.waitKey(1)
 #if cv2.waitKey(1) == ord('q'):
 #    break
