@@ -204,7 +204,7 @@ class Sort(object):
     self.trackers = []
     self.frame_count = 0
 
-  def update(self, dets=np.empty((0, 5))):
+  def update(self, dets=np.empty((0, 5)),frame=np.empty((1024,255))):
     """
     Params:
       dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
@@ -221,6 +221,7 @@ class Sort(object):
     for t, trk in enumerate(trks):
       pos = self.trackers[t].predict()[0]
       trk[:] = [pos[0], pos[1], pos[2], pos[3], 0]
+      frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[2]), int(pos[3])), (255, 0, 0), 3)
       if np.any(np.isnan(pos)):
         to_del.append(t)
     trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
@@ -544,7 +545,7 @@ for i in range(len(filelist)):
 
 #print(frame.shape)
 
-for video in file_array:
+for video in file_array[1:-1]:
     mot_tracker = Sort(max_age=1,
                        min_hits=3,
                        iou_threshold=0.3)  # create instance of the SORT tracker
@@ -553,7 +554,7 @@ for video in file_array:
         frame = cv2.imread(f)
         result = a.forword(frame)
         start_time = time.time()
-        trackers = mot_tracker.update(result)
+        trackers = mot_tracker.update(result,frame)
         cycle_time = time.time() - start_time
         total_time += cycle_time
         total_frames += 1
@@ -579,6 +580,6 @@ for video in file_array:
         cv2.imshow("asd", frame)
 
         #print(result)
-        cv2.waitKey(1)
+        cv2.waitKey(0)
 #if cv2.waitKey(1) == ord('q'):
 #    break
