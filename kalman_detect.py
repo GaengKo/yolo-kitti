@@ -97,18 +97,29 @@ class KalmanBoxTracker(object):
         Initialises a tracker using initial bounding box.
         """
         # define constant velocity model
-        self.kf = KalmanFilter(dim_x=7, dim_z=4)  # 상태변수 7, measurement imput 4
+        self.kf = KalmanFilter(dim_x=7, dim_z=4)  # 상태변수 7, measurement input 4
         self.kf.F = np.array(
             [[1, 0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 0, 1, 0], [0, 0, 1, 0, 0, 0, 1], [0, 0, 0, 1, 0, 0, 0],
              [0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 1]])  # transfer matrix
         self.kf.H = np.array([[1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0],
                               [0, 0, 0, 1, 0, 0, 0]])  # measurement function
-
+        print('R')
+        print(self.kf.R)
         self.kf.R[2:, 2:] *= 10.  # measurement noise
+        print('R + noise')
+        print(self.kf.R)
+        print('P')
+        print(self.kf.P)
         self.kf.P[4:, 4:] *= 1000.  # give high uncertainty to the unobservable initial velocities
         self.kf.P *= 10.  # covariance
+        print('P + noise')
+        print(self.kf.P)
+        print('Q')
+        print(self.kf.Q)
         self.kf.Q[-1, -1] *= 0.01  # process noise
         self.kf.Q[4:, 4:] *= 0.01
+        print('Q+noise')
+        print(self.kf.Q)
 
         self.kf.x[:4] = convert_bbox_to_z(bbox)
         self.time_since_update = 0
@@ -580,6 +591,6 @@ for video in file_array[1:-1]:
         cv2.imshow("asd", frame)
 
         #print(result)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
 #if cv2.waitKey(1) == ord('q'):
 #    break
