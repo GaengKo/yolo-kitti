@@ -43,6 +43,9 @@ def iou_batch(bb_test, bb_gt):
     """
     From SORT: Computes IOU between two bboxes in the form [x1,y1,x2,y2]
     """
+    print('******************')
+    print(bb_test,bb_gt)
+    print('******************')
     bb_gt = np.expand_dims(bb_gt, 0)
     bb_test = np.expand_dims(bb_test, 1)
 
@@ -55,6 +58,9 @@ def iou_batch(bb_test, bb_gt):
     wh = w * h
     o = wh / ((bb_test[..., 2] - bb_test[..., 0]) * (bb_test[..., 3] - bb_test[..., 1])
               + (bb_gt[..., 2] - bb_gt[..., 0]) * (bb_gt[..., 3] - bb_gt[..., 1]) - wh)
+    print('aaaaaaaaaaaaaaa')
+    print(o)
+    print('aaaaaaaaaaaaaaa')
     return (o)
 
 
