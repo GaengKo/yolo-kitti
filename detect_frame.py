@@ -1,9 +1,14 @@
 import argparse
-
+import os
+import sys
+import numpy as np
+import cv2
+py_dll_path = os.path.join(sys.exec_prefix, 'Library', 'bin')
+os.add_dll_directory(py_dll_path)
 from models import *  # set ONNX_EXPORT in models.py
 from utils.datasets import *
 from utils.utils import *
-import numpy as np
+
 class Yolo():
     def __init__(self):
         self.weights = 'weights/best.pt'
@@ -66,9 +71,12 @@ class Yolo():
             if det is not None and len(det):
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], frame.shape).round()
                 #print(det[:,:4])
-
-        result = pred[0].cpu().detach().numpy()
-        print(result)
+        try:
+            result = pred[0].cpu().detach().numpy()
+        except Exception as E:
+            print(pred[0])
+            return []
+        #print(result)
         return result
 
 
@@ -265,6 +273,40 @@ def detect(save_img=False):
 #         detect()
 
 a = Yolo()
-frame = cv2.imread('./data/samples/000002.png')
+#frame = cv2.imread('./data/samples/000002.png')
+path = 'H:/Trackingset'
+filelist = os.listdir(path)
+print(filelist)
+file_array = []
+for i in range(len(filelist)):
+    npath = path+'/'+filelist[i]
+    filelist2 = os.listdir(npath)
+    for j in filelist2:
+        file_array.append(npath+'/'+j)
 #print(frame.shape)
-a.forword(frame)
+for k in file_array:
+    #if k != 'H:/Trackingset/0001/000142.png':
+    #    continue
+    print(k)
+    frame = cv2.imread(k)
+    result = a.forword(frame)
+    for i in range(len(result)):
+        #if i == 7:
+        #    continue
+        #print(result[i])
+        #if result[i][5] == 2:
+        #    t= 'Car'
+        #elif result[i][5] == 0:
+        #    t='Pedestrian'
+        #else :
+        #    t = 'Van'
+
+        frame = cv2.rectangle(frame, (result[i][0],result[i][1]), (result[i][2],result[i][3]),(0,0,255),3)
+        #frame = cv2.putText(frame, t, (int(result[i][0]), int(result[i][1])), 1, 2, (0, 255, 255), 2)
+    cv2.imshow("asd", frame)
+
+    #print(result)
+
+    cv2.waitKey(1)
+#if cv2.waitKey(1) == ord('q'):
+#    break
